@@ -13,7 +13,6 @@ import android.util.Log;
 import android.widget.Toast;
 import java.io.OutputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 
 
@@ -21,10 +20,10 @@ public class MainActivity extends AppCompatActivity {
     final static String TAG = "whatevs";
     private WifiP2pManager manager;
     private WifiP2pManager.Channel channel;
-    WifiP2pDeviceList peerList = new WifiP2pDeviceList();
+    //WifiP2pDeviceList peerList = new WifiP2pDeviceList();
     IntentFilter mIntentFilter;
     private static String address = "66:b3:10:d1:75:d7";
-    private static int port = 8080;
+    private static int port = 8988;
     //configure the address
     WifiP2pConfig config = new WifiP2pConfig();
     static WifiP2pInfo winfo;
@@ -43,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
         // I code here
-        Toast.makeText(getApplicationContext(), "started", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getApplicationContext(), "started", Toast.LENGTH_SHORT).show();
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
         manager.initialize(getApplicationContext(), getMainLooper(), null);
@@ -52,22 +51,16 @@ public class MainActivity extends AppCompatActivity {
         manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                Toast.makeText(getApplicationContext(), "Discovery Initiated",
-                        Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "Discovery Initiated",
+                //        Toast.LENGTH_SHORT).show();
                 if (manager != null) {
-                    try {
-                        Thread.sleep(3000);
-                    }
-                    catch (Exception e){
-                        e.printStackTrace();
-                    }
                     manager.requestPeers(channel, new WifiP2pManager.PeerListListener() {
                         @Override
                         public void onPeersAvailable(WifiP2pDeviceList peers) {
                             //on peers available, update peer list and log them
                             //Log.d(MainActivity.TAG, String.format("PeerListListener: %d peers available, updating device list", peers.getDeviceList().size()));
-                            peerList = peers;
-                            Log.e(TAG, "DeviceList : " + peers.getDeviceList());
+                            //peerList = peers;
+                            //Log.e(TAG, "DeviceList : " + peers.getDeviceList());
                             connect();
                         }
                     });
@@ -79,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT).show();
             }
         });
-
     }
 
     public void connect(){
@@ -89,28 +81,26 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess() {
                 //success logic
-                Toast.makeText(getApplicationContext(), "Connected",
-                        Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "Connected",
+                //        Toast.LENGTH_SHORT).show();
                 Log.e(TAG, "Connected");
-                try {
-                    Thread.sleep(5000);
-                }
-                catch (Exception e){
-                    e.printStackTrace();
-                }
                 manager.requestConnectionInfo(channel, new WifiP2pManager.ConnectionInfoListener() {
                     @Override
                     public void onConnectionInfoAvailable(WifiP2pInfo info) {
-                        if (info.groupOwnerAddress != null){
-                            winfo=info;
-                            Log.e(TAG, "info : \n" + info);
+                        try {
+                            Thread.sleep(10000);
+                        }
+                        catch (Exception e){
+                            e.printStackTrace();
+                        }
+                        if (info.groupOwnerAddress != null) {
+                            winfo = info;
+                            //Log.e(TAG, "info : \n" + info);
                             //send IP Address from here
                             //Or do whatever
-                            //transfer(info.groupOwnerAddress);
                             new Async(info.groupOwnerAddress).execute();
-                        }
-                        else{
-                            Log.e(TAG,"requestConnectionInfo null");
+                        } else {
+                            Log.e(TAG, "requestConnectionInfo null");
                         }
                     }
                 });
@@ -126,24 +116,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-/*
-    public void transfer(InetAddress IPAdress) {
-        final InetAddress adrs = IPAdress;
-        Log.d(TAG, "Opening client socket... ");
-        Socket socket;
-        String data = "hi.txt";
-        try{
-            socket = new Socket(adrs, 8898);
-            //socket.connect((new InetSocketAddress(IPAdress, 8898)), 5000);
-            Log.d(TAG, "Client socket - " + socket.isConnected());
-            OutputStream stream = socket.getOutputStream();
-            stream.write(data.getBytes());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+    public static int get_port(){
+        return port;
     }
-    */
+
 }
 class Async extends AsyncTask<InetAddress, Void, String> {
     InetAddress adrs;
@@ -152,23 +128,14 @@ class Async extends AsyncTask<InetAddress, Void, String> {
     protected String doInBackground(InetAddress... params) {
         try {
             Log.d(MainActivity.TAG, "Opening client socket... ");
-            Socket socket;// =new Socket();
+            Socket socket;
             String data = "hi.txt";
-            Log.e(MainActivity.TAG, "getAddress : \n" + adrs.getHostAddress());
-            Log.e(MainActivity.TAG, "adrs : \n" + adrs);
-            socket = new Socket(adrs, 8898);
-            Log.e(MainActivity.TAG, ""+ socket.getInetAddress());
-            //socket.connect((new InetSocketAddress(IPAdress, 8898)), 5000);
+            socket = new Socket(adrs, MainActivity.get_port());
+            //socket.connect((new InetSocketAddress(IPAdress, 8988)), 5000);
             Log.d(MainActivity.TAG, "Client socket - " + socket.isConnected());
             OutputStream stream = socket.getOutputStream();
             stream.write(data.getBytes());
         } catch (Exception e) {e.printStackTrace();}
         return null;
-    }
-
-    @Override
-    protected void onPostExecute(String result) {
-        // TODO: check this.exception
-        // TODO: do something with the feed
     }
 }
