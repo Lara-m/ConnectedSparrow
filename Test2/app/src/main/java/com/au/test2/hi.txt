@@ -1,0 +1,18 @@
+Hi!
+
+
+    private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
+    WifiP2pDeviceList peerList;
+    final static String TAG = "whatevs";
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Log.e(TAG, "1");
+        Log.e(TAG,""+peerList.getDeviceList());
+        peers.clear();
+        peers.addAll(peerList.getDeviceList());
+        Log.e(TAG, peers.toString());
+    }
