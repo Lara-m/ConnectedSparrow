@@ -6,23 +6,15 @@ import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
-
-import org.xml.sax.InputSource;
-import org.xml.sax.XMLReader;
-
-import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.URL;
-
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -63,6 +55,12 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Discovery Initiated",
                         Toast.LENGTH_SHORT).show();
                 if (manager != null) {
+                    try {
+                        Thread.sleep(3000);
+                    }
+                    catch (Exception e){
+                        e.printStackTrace();
+                    }
                     manager.requestPeers(channel, new WifiP2pManager.PeerListListener() {
                         @Override
                         public void onPeersAvailable(WifiP2pDeviceList peers) {
@@ -94,15 +92,22 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Connected",
                         Toast.LENGTH_SHORT).show();
                 Log.e(TAG, "Connected");
+                try {
+                    Thread.sleep(5000);
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                }
                 manager.requestConnectionInfo(channel, new WifiP2pManager.ConnectionInfoListener() {
                     @Override
                     public void onConnectionInfoAvailable(WifiP2pInfo info) {
                         if (info.groupOwnerAddress != null){
                             winfo=info;
-                            Log.e(TAG, "info" + info);
+                            Log.e(TAG, "info : \n" + info);
                             //send IP Address from here
                             //Or do whatever
-                            transfer(info.groupOwnerAddress);
+                            //transfer(info.groupOwnerAddress);
+                            new Async(info.groupOwnerAddress).execute();
                         }
                         else{
                             Log.e(TAG,"requestConnectionInfo null");
@@ -121,60 +126,49 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-
-    Socket socket;
-    String data = "hi.txt";
+/*
     public void transfer(InetAddress IPAdress) {
         final InetAddress adrs = IPAdress;
         Log.d(TAG, "Opening client socket... ");
-
-
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    socket = new Socket(adrs, 8898);
-                    //socket.connect((new InetSocketAddress(IPAdress, 8898)), 5000);
-                    Log.d(TAG, "Client socket - " + socket.isConnected());
-                    OutputStream stream = socket.getOutputStream();
-                    try {
-                        stream.write(data.getBytes());
-                    } catch (FileNotFoundException e) {
-                        Log.d(TAG, e.toString());
-                    }
-                }
-                catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
-        }).run();
+        Socket socket;
+        String data = "hi.txt";
+        try{
+            socket = new Socket(adrs, 8898);
+            //socket.connect((new InetSocketAddress(IPAdress, 8898)), 5000);
+            Log.d(TAG, "Client socket - " + socket.isConnected());
+            OutputStream stream = socket.getOutputStream();
+            stream.write(data.getBytes());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
-    class RetrieveFeedTask extends AsyncTask<String, Void, RSSFeed> {
+    */
+}
+class Async extends AsyncTask<InetAddress, Void, String> {
+    InetAddress adrs;
+    public Async(InetAddress adrs) {this.adrs = adrs;}
+    @Override
+    protected String doInBackground(InetAddress... params) {
+        try {
+            Log.d(MainActivity.TAG, "Opening client socket... ");
+            Socket socket;// =new Socket();
+            String data = "hi.txt";
+            Log.e(MainActivity.TAG, "getAddress : \n" + adrs.getHostAddress());
+            Log.e(MainActivity.TAG, "adrs : \n" + adrs);
+            socket = new Socket(adrs, 8898);
+            Log.e(MainActivity.TAG, ""+ socket.getInetAddress());
+            //socket.connect((new InetSocketAddress(IPAdress, 8898)), 5000);
+            Log.d(MainActivity.TAG, "Client socket - " + socket.isConnected());
+            OutputStream stream = socket.getOutputStream();
+            stream.write(data.getBytes());
+        } catch (Exception e) {e.printStackTrace();}
+        return null;
+    }
 
-        private Exception exception;
-
-        protected RSSFeed doInBackground(String... urls) {
-            try {
-                URL url= new URL(urls[0]);
-                SAXParserFactory factory = SAXParserFactory.newInstance();
-                SAXParser parser=factory.newSAXParser();
-                XMLReader xmlreader=parser.getXMLReader();
-                RssHandler theRSSHandler=new RssHandler();
-                xmlreader.setContentHandler(theRSSHandler);
-                InputSource is=new InputSource(url.openStream());
-                xmlreader.parse(is);
-                return theRSSHandler.getFeed();
-            } catch (Exception e) {
-                this.exception = e;
-                return null;
-            }
-        }
-
-        protected void onPostExecute(RSSFeed feed) {
-            // TODO: check this.exception
-            // TODO: do something with the feed
-        }
+    @Override
+    protected void onPostExecute(String result) {
+        // TODO: check this.exception
+        // TODO: do something with the feed
     }
 }
