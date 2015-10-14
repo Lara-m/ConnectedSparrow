@@ -17,7 +17,7 @@ import java.net.Socket;
 
 
 public class MainActivity extends AppCompatActivity {
-    final static String TAG = "whatevs";
+    final static String TAG = "P2Pconn";
     private WifiP2pManager manager;
     private WifiP2pManager.Channel channel;
     //WifiP2pDeviceList peerList = new WifiP2pDeviceList();
@@ -25,8 +25,10 @@ public class MainActivity extends AppCompatActivity {
     private static String address = "66:b3:10:d1:75:d7";
     private static int port = 8988;
     //configure the address
-    WifiP2pConfig config = new WifiP2pConfig();
-    static WifiP2pInfo winfo;
+    WifiP2pConfig config;
+    //static WifiP2pInfo winfo;
+    String data = "blah blah, I got this thing here and it drags text from here to there! :D " +
+            "Hihihihi! :D ";
 
 
     @Override
@@ -45,8 +47,9 @@ public class MainActivity extends AppCompatActivity {
         //Toast.makeText(getApplicationContext(), "started", Toast.LENGTH_SHORT).show();
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
-        manager.initialize(getApplicationContext(), getMainLooper(), null);
-
+        //manager.initialize(getApplicationContext(), getMainLooper(), null);
+        config = new WifiP2pConfig();
+        config.deviceAddress = address;
         //discover peers
         manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
             @Override
@@ -68,14 +71,13 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onFailure(int reasonCode) {
-                Toast.makeText(getApplicationContext(), "Discovery Failed : " + reasonCode,
-                        Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Discovery Failed : " + reasonCode);
             }
         });
     }
 
     public void connect(){
-        config.deviceAddress = address;
+
         // connect to the address
         manager.connect(channel, config, new WifiP2pManager.ActionListener() {
             @Override
@@ -83,22 +85,16 @@ public class MainActivity extends AppCompatActivity {
                 //success logic
                 //Toast.makeText(getApplicationContext(), "Connected",
                 //        Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "Connected");
+                Log.d(TAG, "Connected");
                 manager.requestConnectionInfo(channel, new WifiP2pManager.ConnectionInfoListener() {
                     @Override
                     public void onConnectionInfoAvailable(WifiP2pInfo info) {
-                        try {
-                            Thread.sleep(10000);
-                        }
-                        catch (Exception e){
-                            e.printStackTrace();
-                        }
                         if (info.groupOwnerAddress != null) {
-                            winfo = info;
-                            //Log.e(TAG, "info : \n" + info);
+                            //winfo = info;
+                            Log.d(TAG, "InetAddress : " + info.groupOwnerAddress.getHostAddress() + "\nPort:"+port);
                             //send IP Address from here
                             //Or do whatever
-                            new Async(info.groupOwnerAddress).execute();
+                            new AsyncSocketTask(new DataHolder(info.groupOwnerAddress,port,data)).execute();
                         } else {
                             Log.e(TAG, "requestConnectionInfo null");
                         }
@@ -115,27 +111,5 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-    }
-    public static int get_port(){
-        return port;
-    }
-
-}
-class Async extends AsyncTask<InetAddress, Void, String> {
-    InetAddress adrs;
-    public Async(InetAddress adrs) {this.adrs = adrs;}
-    @Override
-    protected String doInBackground(InetAddress... params) {
-        try {
-            Log.d(MainActivity.TAG, "Opening client socket... ");
-            Socket socket;
-            String data = "hi.txt";
-            socket = new Socket(adrs, MainActivity.get_port());
-            //socket.connect((new InetSocketAddress(IPAdress, 8988)), 5000);
-            Log.d(MainActivity.TAG, "Client socket - " + socket.isConnected());
-            OutputStream stream = socket.getOutputStream();
-            stream.write(data.getBytes());
-        } catch (Exception e) {e.printStackTrace();}
-        return null;
     }
 }
