@@ -11,9 +11,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        //Just needs the two to get going: A Stringbuilder and a port.
         StringBuilder out = new StringBuilder();
-        new ServerRecursiveTask(this, out,port);
+        new ServerRecursiveTask(this, out, port);
 
     }
 }
