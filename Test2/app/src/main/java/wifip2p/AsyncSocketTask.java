@@ -1,28 +1,36 @@
-package com.au.test2;
+package wifip2p;
 
 import android.os.AsyncTask;
 import android.util.Log;
-
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.net.Socket;
 
-/**
- * Created by lara on 14/10/2015.
- */
+/*
+* AynchTask class to open a socket asynchronously and write data to the open socket.
+* Autonomous operation.
+* Input:DataHolder
+* Output: Void
+* Contains: doInBackground method
+*
+* Author: Lara
+*
+*/
+
+
 public class AsyncSocketTask extends AsyncTask<DataHolder, Void, String> {
     DataHolder dh;
 
     public AsyncSocketTask(DataHolder dh) {
+        Log.d(Wifip2pHandler.TAG,"AsynchTask Started");
         this.dh = dh;
     }
     @Override
     protected String doInBackground(DataHolder... params) {
         try {
-            Log.d(MainActivity.TAG, "Opening client socket... ");
+            Log.d(Wifip2pHandler.TAG, "Opening client socket... ");
             Socket socket;
             socket = new Socket(dh.inetAddress, dh.port);
-            Log.d(MainActivity.TAG, "Client socket is connected : " + socket.isConnected());
+            Log.d(Wifip2pHandler.TAG, "Client socket is connected : " + socket.isConnected());
             OutputStream stream = socket.getOutputStream();
             stream.write(dh.data.getBytes());
             socket.close();

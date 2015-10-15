@@ -1,10 +1,15 @@
-package com.au.test2;
+package wifip2p;
 
 import java.net.InetAddress;
 
-/**
- * Created by lara on 14/10/2015.
- */
+/*
+* Data holder class.
+* Queueing object to be used between wifip2pHandler and the AsyncSocketTask
+*
+* Author: Lara
+*
+*/
+
 public class DataHolder {
     InetAddress inetAddress;
     int port;
